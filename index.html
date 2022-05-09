@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="./css/style.css">
+    <title>JCGTrade</title>
+</head>
+
+<body class="container bg-dark text-light">
+    <header class="row">
+    </header>
+    <nav class="col-12 navbar navbar-expand-md navbar-dark bg-dark justify-content-end">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="col-2 col-md-auto collapse navbar-collapse" id="navbarSupportedContent">
+            <a class="navbar-brand d-none d-md-block ms-auto mb-2 mb-lg-0" href="#">Navbar</a>
+            <ul class="navbar-nav ms-auto ms-md-0 col-5 col-md-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Link</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        Dropdown
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="#">Action</a></li>
+                        <li><a class="dropdown-item" href="#">Another action</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="#">Something else here</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled">Disabled</a>
+                </li>
+            </ul>
+
+        </div>
+    </nav>
+    <main class="row">
+        <div id="Panel1" class="col-12 col-md-4 d-flex flex-column justify-content-center align-items-center">
+            <div class="row col-12 d-flex flex-column justify-content-start align-items-start border border-light mb-3">
+                <div class="h5 text-center">Cotización</div>
+                <div id="idSymPrice"></div>
+            </div>
+            <div class="row col-12 d-flex flex-column justify-content-start align-items-start border border-light mb-3">
+                <div class="h5 text-center">Soporte-Resistencia</div>
+                <div class="row col-12 fs-6">
+                    <div class="col-12 d-flex flex-row justify-content-start align-items-start">
+                        <div class="col-2 d-flex flex-column align-items-end p-2">
+                            <div>Actual</div>
+                            <div>5m</div>
+                            <div>30m</div>
+                            <div>4h</div>
+                        </div>
+                        <div id="idSopRes" class="col-10 p-2">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4 d-flex flex-column align-items-center">
+            <div class="h3">Panel 2</div>
+        </div>
+
+        <div class="col-12 col-md-4 d-flex flex-column align-items-center">
+            <div class="h3">Panel 3</div>
+        </div>
+    </main>
+
+    <footer></footer>
+</body>
+
+<!--DECLARACIÓN DE SCRIPTS-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+    crossorigin="anonymous"></script>
+<script src="/scripts/main.js" type="module"></script>
+
+</html>
