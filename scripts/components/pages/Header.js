@@ -3,8 +3,9 @@ export const Header = () => {
         <div class="col-4 col-md-2 d-flex flex-row justify-content-center align-items-center">
             <img class="img-fluid" width="80px" src="./images/JCGTrade.png" alt="Logo de JCGBinTrade" srcset="">
         </div>
-        <div class="d-none col-md-6 p-2 d-md-flex flex-row justify-content-center align-items-center">
-            <div class="h1">JCGTrade</div>
+        <div class="d-none col-md-6 p-2 d-md-flex flex-column justify-content-center align-items-center">
+            <div class="h1 text-center">JCGTrade</div>
+            <div class="h2 text-center">(Página en desarrollo)</div>
         </div>
         <div class="col-8 col-md-4 p-2">
             <div class="row">

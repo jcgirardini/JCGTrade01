@@ -36,7 +36,7 @@ function fncTemporizadorGlobal() {
 };
 // Función de inicio al cargar la página
 async function fncBinInicio() {
-    await fncReset();
+    fncReset();
     if (!blnBinInfo.stsInfo) {
         blnBinInfo.stsInfo = true;
         blnBinInfo.stsInfo = await binGetInfo(binExchgInfo);
@@ -52,24 +52,24 @@ async function fncObtenerHora() {
     }
 }
 // Reset de variables de control de flujo y sincronización
-async function fncReset() {
+function fncReset() {
     blnJcgInfo.reset();
     blnBinInfo.reset();
-    await fncObtenerHora();
+    fncObtenerHora();
 }
 // Función de seteo del Símbolo con el que se trabajará
 async function fncSetSymbol(simbolo) {
     if (binExchgInfo.symbols.length > 0) {
-        await fncReset();
+        fncReset();
         binExchgInfo.setSymbol(simbolo);
         jcgCandles.setSimbolo(binExchgInfo.selSymbol.symbol);
         blnBinInfo.stsSymbol = binExchgInfo.selSymbol.symbol === jcgCandles.simbPrice.symbol;
         glbBinAssetOptions.maximumSignificantDigits = binExchgInfo.selSymbol.quoteAssetPrecision;
         $("#idInpSymbol").val(simbolo);
         (blnBinInfo.stsSymbol && !blnBinInfo.stsPrice) && await jcgCandles.getPrice();
-        $("#idSymPrice").html(jcgCandles.getDomPrice());
+        jcgCandles.getDomPrice("#idSymPrice");
         await jcgCandles.getInicial();
-        $("#idSopRes").html(jcgCandles.getDomSR());
+        jcgCandles.getDomSR("#idSopRes");
     };
 }
 
@@ -81,26 +81,29 @@ async function fncBin10seg() {
     await fncObtenerHora();
     if (blnBinInfo.stsSymbol && !blnBinInfo.stsPrice) {
         await jcgCandles.getPrice();
-        $("#idSymPrice").html(jcgCandles.getDomPrice());
-        $("#idSopRes").html(jcgCandles.getDomSR());
+        jcgCandles.getDomPrice("#idSymPrice");
+        jcgCandles.getDomSR("#idSopRes");
+        jcgCandles.getDOMEma("ema05mCl");
+        jcgCandles.getDOMEma("ema30mCl");
+        jcgCandles.getDOMEma("ema04hCl");
     }
 }
 
-function fncBin01min() {
+async function fncBin01min() {
     if (blnBinInfo.stsSymbol) {
-        jcgCandles.getCandel("5m");
+        await jcgCandles.getCandel("5m");
     }
 }
 
-function fncBin05min() {
+async function fncBin05min() {
     if (blnBinInfo.stsSymbol) {
-        jcgCandles.getCandel("30m");
+        await jcgCandles.getCandel("30m");
     }
 }
 
-function fncBin30min() {
+async function fncBin30min() {
     if (blnBinInfo.stsSymbol) {
-        jcgCandles.getCandel("4h");
+        await jcgCandles.getCandel("4h");
     }
 }
 

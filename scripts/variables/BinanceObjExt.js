@@ -134,7 +134,7 @@ class ClsCandelExt extends ClsCandel {
 }
 class ClsCandelsExt extends ClsCandels {
     constructor() {
-        super();;
+        super();
     }
     fillArray(arrayVelas) {
         this.candles.length = 0;

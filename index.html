@@ -49,10 +49,10 @@
         </div>
     </nav>
     <main class="row">
-        <div id="Panel1" class="col-12 col-md-4 d-flex flex-column justify-content-center align-items-center">
+        <div id="Panel1" class="col-12 col-md-4 d-flex flex-column justify-content-start align-items-center">
             <div class="row col-12 d-flex flex-column justify-content-start align-items-start border border-light mb-3">
                 <div class="h5 text-center">Cotización</div>
-                <div id="idSymPrice"></div>
+                <div id="idSymPrice" class="h5 text-center">(... precio)</div>
             </div>
             <div class="row col-12 d-flex flex-column justify-content-start align-items-start border border-light mb-3">
                 <div class="h5 text-center">Soporte-Resistencia</div>
@@ -72,11 +72,28 @@
             </div>
         </div>
 
-        <div class="col-12 col-md-4 d-flex flex-column align-items-center">
-            <div class="h3">Panel 2</div>
+        <div id="Panel2" class="col-12 col-md-4 d-flex flex-column justify-content-start align-items-center">
+            <div class="row col-12 d-flex flex-column justify-content-start align-items-start border border-light mb-3">
+                <div class="h5 text-center">Indicadores</div>
+                <div class="h5 text-center">EMA <span style="color: cyan">02</span> - <span
+                        style="color: yellow">07</span>
+                    - <span style="color: magenta">25</span>
+                </div>
+            </div>
+            <div class="row col-12 d-flex flex-column justify-content-start align-items-start border border-light mb-3">
+                <div class="h5 text-center">Intervalo 5m</div>
+                <canvas id="ema05mCl" class="col-12 bg-dark text-light m-auto" width="300" height="300">...calculando CANVAS</canvas>
+            </div>
+            <div class="row col-12 d-flex flex-column justify-content-start align-items-start border border-light mb-3">
+                <div class="h5 text-center">Intervalo 30m</div>
+                <canvas id="ema30mCl" class="col-12 bg-dark text-light m-auto" width="300" height="300">...calculando CANVAS</canvas>
+            </div>
+            <div class="row col-12 d-flex flex-column justify-content-start align-items-start border border-light mb-3">
+                <div class="h5 text-center">Intervalo 4h</div>
+                <canvas id="ema04hCl" class="col-12 bg-dark text-light m-auto" width="300" height="300">...calculando CANVAS</canvas>
+            </div>
         </div>
-
-        <div class="col-12 col-md-4 d-flex flex-column align-items-center">
+        <div id="Panel3" class="col-12 col-md-4 d-flex flex-column justify-content-start align-items-center">
             <div class="h3">Panel 3</div>
         </div>
     </main>

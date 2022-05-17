@@ -45,7 +45,7 @@ class ClsIndTec {
         this.signal = [];
         this.histo = [];
     }
-    getInicial(candelas) {
+    async getInicial(candelas) {
         this.candles = candelas;
         this.ema02.length = 0;
         this.ema07.length = 0;
@@ -74,7 +74,7 @@ class ClsIndTec {
         this.recortar();
         return false;
     }
-    actCandelas(candela) {
+    async actCandelas(candela) {
         this.candles.push(candela);
         let i = this.candles.length - 1;
         this.ema02.push(ema(2, this.ema02[i - 1], this.candles[i]));
@@ -85,7 +85,7 @@ class ClsIndTec {
         this.histo.push(this.macd[i] - this.signal[i]);
         this.recortar();
     }
-    recortar() {
+    async recortar() {
         recortarArray(this.candles, 20);
         recortarArray(this.ema02, 20);
         recortarArray(this.ema07, 20);
@@ -93,6 +93,15 @@ class ClsIndTec {
         recortarArray(this.macd, 20);
         recortarArray(this.signal, 20);
         recortarArray(this.histo, 20);
+    }
+    reset() {
+        this.candles.length = 0;
+        this.ema02.length = 0;
+        this.ema07.length = 0;
+        this.ema25.length = 0;
+        this.macd.length = 0;
+        this.signal.length = 0;
+        this.histo.length = 0;
     }
 }
 class ClsSopRes {
@@ -103,7 +112,7 @@ class ClsSopRes {
         this.margen = 0;
         this.domBarra = "";
     }
-    getSopRes(barra, actual, maxbar, minbar) {
+    getSopRes(barra, actual, maxbar, minbar, blnTxt) {
         let op = barra.open;
         let hi = actual > barra.high ? actual : barra.high;
         let lo = actual !== 0 & actual < barra.low ? actual : barra.low;
@@ -121,6 +130,9 @@ class ClsSopRes {
         let d3 = Math.round((hi - this.pp) / dt);
         let d4 = 100 - (d1 + d2 + d3);
         this.margen = (hi - lo) / lo * 100;
+        let fixed = 7 - Math.trunc(op).toString().length;
+        let min = blnTxt ? this.s1.toFixed(fixed) : "";
+        let max = blnTxt ? this.r1.toFixed(fixed) : "";
 
         let flechaIzq = `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-arrow-left-square" viewBox="0 0 16 16">
                         <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm11.5 5.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z"/>
@@ -133,10 +145,10 @@ class ClsSopRes {
 
         let barra1 = `<div class="progress-bar bg-secondary align-items-start" role="progressbar" style="width: ${d1}%"
                    aria-valuenow="${d1}" aria-valuemin="0" aria-valuemax="100">${flecha}</div>`;
-        let barra2 = `<div class="progress-bar jcgbg__compra" role = "progressbar" style = "width: ${d2}%"
-                   aria-valuenow="${d2}" aria-valuemin="0" aria-valuemax="100"></div >`;
-        let barra3 = `<div class="progress-bar jcgbg__venta" role = "progressbar" style = "width: ${d3}%"
-                   aria-valuenow="${d3}" aria-valuemin="0" aria-valuemax="100"></div >`;
+        let barra2 = `<div class="progress-bar jcgbg__compra text-center text-dark" role = "progressbar" style = "width: ${d2}%"
+                   aria-valuenow="${d2}" aria-valuemin="0" aria-valuemax="100">${min}</div >`;
+        let barra3 = `<div class="progress-bar jcgbg__venta text-center text-dark" role = "progressbar" style = "width: ${d3}%"
+                   aria-valuenow="${d3}" aria-valuemin="0" aria-valuemax="100">${max}</div >`;
         let barra4 = `<div class="progress-bar bg-secondary text-end" role = "progressbar" style = "width: ${d4}%"
                    aria-valuenow="${d4}" aria-valuemin="0" aria-valuemax="100">${this.margen.toFixed(1)}%</div >`;
         this.domBarra = barra1 + barra2 + barra3 + barra4;
@@ -169,7 +181,7 @@ class ClsJcgBin {
         this.stsBusy = false;
     }
     //TAREAS SINCRÓNICAS
-    setSimbolo(strSymbol) {
+    async setSimbolo(strSymbol) {
         this.reset();
         this.simbPrice.symbol = strSymbol;
     }
@@ -178,7 +190,7 @@ class ClsJcgBin {
         let indAux = "ind" + ("00" + periodo).slice(-3) + "Cl";
         this[candAux].candles.push(candela);
         recortarArray(this[candAux].candles, 200);
-        this[indAux].actCandelas(candela);
+        this[indAux].actCandelas(candela.close);
     }
     actSopRes() {
         let indice = this.cand05m.candles.length - 1;
@@ -189,10 +201,10 @@ class ClsJcgBin {
         let barra04h = this.cand04h.candles[indice - 1];
         let max = Math.max(actual, barra05m.high, barra30m.high, barra04h.high);
         let min = Math.min(actual, barra05m.low, barra30m.low, barra04h.low);
-        this.srAct.getSopRes(barraAct, actual, max, min);
-        this.sr05m.getSopRes(barra05m, actual, max, min);
-        this.sr30m.getSopRes(barra30m, actual, max, min);
-        this.sr04h.getSopRes(barra04h, actual, max, min);
+        this.srAct.getSopRes(barraAct, actual, max, min, false);
+        this.sr05m.getSopRes(barra05m, actual, max, min, false);
+        this.sr30m.getSopRes(barra30m, actual, max, min, false);
+        this.sr04h.getSopRes(barra04h, actual, max, min, true);
     }
     reset() {
         this.simbPrice.reset();
@@ -203,6 +215,9 @@ class ClsJcgBin {
         this.sr05m.reset();
         this.sr30m.reset();
         this.sr04h.reset();
+        this.ind05mCl.reset();
+        this.ind30mCl.reset();
+        this.ind04hCl.reset();
         this.sts05m = false;
         this.sts30m = false;
         this.sts04h = false;
@@ -210,21 +225,54 @@ class ClsJcgBin {
     }
 
     //ELEMENTOS DEL DOM
-    getDomPrice() {
-        let domPrice = `<div class="col-12 d-flex flex-row justify-content-between align-items-start fs-6">
+    getDomPrice(padre) {
+        let domPrice = `<div class="col-12 d-flex flex-row justify-content-between align-items-start">
                         <div>1 ${binExchgInfo.selSymbol.baseAsset} = </div>
                         <div>${glbBinFormatAsset.format(this.simbPrice.price)}</div>
                         <div>${binExchgInfo.selSymbol.quoteAsset}</div>
                     </div>`;
-        return domPrice;
+        $(padre).html(domPrice);
     }
-    getDomSR() {
+    getDomSR(padre) {
         let auxact = `<div id="sract" class="progress barIndicadores">${this.srAct.domBarra}</div>`;
         let aux05m = `<div id="sr05m" class="progress barIndicadores">${this.sr05m.domBarra}</div>`;
         let aux30m = `<div id="sr30m" class="progress barIndicadores">${this.sr30m.domBarra}</div>`;
         let aux04h = `<div id="sr04h" class="progress barIndicadores">${this.sr04h.domBarra}</div>`;
         let domSR = auxact + aux05m + aux30m + aux04h;
-        return domSR;
+        $(padre).html(domSR);
+    }
+    getDOMEma(padre) {
+        let canvas = document.getElementById(padre);
+        if (canvas.getContext) {
+            let nombre = "ind" + padre.substring(3);
+            let ema02 = this[nombre].ema02;
+            let ema07 = this[nombre].ema07;
+            let ema25 = this[nombre].ema25;
+            if (Math.min(ema02.length, ema07.length, ema25.length) > 0) {
+                let max = Math.max(ema02.reduce((prev, act) => Math.max(prev, act)),
+                    ema07.reduce((prev, act) => Math.max(prev, act)),
+                    ema25.reduce((prev, act) => Math.max(prev, act)));
+                let min = Math.min(ema02.reduce((prev, act) => Math.min(prev, act)),
+                    ema07.reduce((prev, act) => Math.min(prev, act)),
+                    ema25.reduce((prev, act) => Math.min(prev, act)));
+                let div = Math.max(ema02.length, ema07.length, ema25.length);
+                let ctx = canvas.getContext('2d');
+                let ancho = canvas.width;
+                let alto = canvas.height;
+                let mrgTitulos = 50;
+                let x0 = mrgTitulos;
+                let y0 = alto - mrgTitulos;
+
+                fncDrwGrid(ctx, ancho, alto, x0, y0, div, max, min);
+                fncDrwEma(ctx, ema02, ema07, ema25, ancho, alto, x0, y0, div, max, min);
+
+            } else {
+                $(padre).html("...esperando información");
+            }
+
+        } else {
+            $(padre).html("Canvas no soportado por este navegador");
+        }
     }
 
     //TAREAS ASINCRÓNICAS
@@ -239,26 +287,29 @@ class ClsJcgBin {
         this.sts05m = true;
         this.sts30m = true;
         this.sts04h = true;
-        while (this.sts05m || this.sts30m || this.sts04h) {
+        let espera = true;
+        while (this.sts05m || this.sts30m || this.sts04h || espera) {
             if (this.sts05m && !this.stsBusy) {
                 this.stsBusy = true;
                 this.sts05m = await binGetCandles(this.simbPrice.symbol, this.cand05m, "5m", 200);
-                this.stsBusy = this.ind05mCl.getInicial(this.cand05m.candles.map(x => x.close));
+                this.stsBusy = await this.ind05mCl.getInicial(this.cand05m.candles.map(x => x.close));
             }
             if (this.sts30m && !this.sts05m && !this.stsBusy) {
                 this.stsBusy = true;
                 this.sts30m = await binGetCandles(this.simbPrice.symbol, this.cand30m, "30m", 200);
-                this.stsBusy = this.ind30mCl.getInicial(this.cand30m.candles.map(x => x.close));
+                this.stsBusy = await this.ind30mCl.getInicial(this.cand30m.candles.map(x => x.close));
             }
             if (this.sts04h && !this.sts30m && !this.stsBusy) {
                 this.stsBusy = true;
                 this.sts04h = await binGetCandles(this.simbPrice.symbol, this.cand04h, "4h", 200);
-                this.stsBusy = this.ind04hCl.getInicial(this.cand04h.candles.map(x => x.close));
+                this.stsBusy = await this.ind04hCl.getInicial(this.cand04h.candles.map(x => x.close));
             }
-            if (!this.sts05m || !this.sts30m || !this.sts04h) {
+            if (!this.sts05m && !this.sts30m && !this.sts04h && espera) {
                 this.actSopRes();
+                espera = false;
             }
         }
+
     }
     async getCandel(periodo = "5m") {
         this.stsBusy = true;
@@ -271,7 +322,7 @@ class ClsJcgBin {
 }
 export { ClsJcgBin };
 
-// FUNCIONES
+// FUNCIONES UTILIZADAS INTERNAMENTE EN ESTE MÓDULO
 function ema(periodo, ant, act) {
     return ((act - ant) * 2 / (periodo + 1) + ant);
 }
@@ -279,4 +330,65 @@ function ema(periodo, ant, act) {
 function recortarArray(array, tamano) {
     let recorte = array.length - tamano;
     recorte > 0 && array.splice(0, array.length - tamano);
+}
+
+// FUNCIONES INTERNAS PARA CANVAS DE EMAS
+function fncDrwGrid(objCanvas, ancho, alto, x0, y0, div, max, min) {
+    objCanvas.clearRect(0, 0, ancho, alto);
+    let intervaloX = Math.trunc((ancho - x0) / div);
+    let intervaloY = Math.trunc(y0 / div);
+    let gridX = new Path2D();
+    let gridY = new Path2D();
+    for (let i = 0; i <= div; i++) {
+        let desplX = x0 + i * intervaloX;
+        let desplY = (i + 1) * intervaloY;
+        gridX.moveTo(desplX, 0);
+        gridX.lineTo(desplX, y0 + 5);
+        gridY.moveTo(x0 - 5, desplY);
+        gridY.lineTo(ancho, desplY);
+    }
+    objCanvas.strokeStyle = "white";
+    objCanvas.lineWidth = 1;
+    objCanvas.stroke(gridX);
+    objCanvas.stroke(gridY);
+
+    let deltaY = (max - min) / div;
+    let fixed = 7 - Math.trunc(max).toString().length;
+    objCanvas.fillStyle = "white";
+    for (let i = 0; i <= div; i += 2) {
+        let desplX = x0 + i * intervaloX;
+        let desplY = (i + 1) * intervaloY;
+        objCanvas.fillText((i - div).toFixed(0), desplX, alto - (alto - y0) / 2);
+        objCanvas.fillText((max - deltaY * i).toFixed(fixed), 5, desplY);
+    }
+}
+function fncDrwEma(objCanvas, ema02, ema07, ema25, ancho, alto, x0, y0, div, max, min) {
+    let deltaX = Math.trunc((ancho - x0) / div);
+    let deltaY = y0 / (max - min);
+    let grid02 = new Path2D();
+    let grid07 = new Path2D();
+    let grid25 = new Path2D();
+
+    for (let i = 0; i <= div; i++) {
+        let desplX = x0 + (i + 1) * deltaX;
+        let desplY02 = y0 - deltaY * (ema02[i]-min);
+        let desplY07 = y0 - deltaY * (ema07[i]-min);
+        let desplY25 = y0 - deltaY * (ema25[i]-min);
+        if (i===0){
+            grid02.moveTo(desplX, desplY02);
+            grid07.moveTo(desplX, desplY07);
+            grid25.moveTo(desplX, desplY25);
+        } else {
+            grid02.lineTo(desplX, desplY02);
+            grid07.lineTo(desplX, desplY07);
+            grid25.lineTo(desplX, desplY25);
+        }
+    }
+    objCanvas.lineWidth = 2;
+    objCanvas.strokeStyle = "cyan";
+    objCanvas.stroke(grid02);
+    objCanvas.strokeStyle = "yellow";
+    objCanvas.stroke(grid07);
+    objCanvas.strokeStyle = "magenta";
+    objCanvas.stroke(grid25);
 }
