@@ -1,4 +1,4 @@
-import { blnJcgInfo, blnBinInfo, glbBinAssetOptions, jcgCandles } from "../variables/main_variables.js";
+import { blnJcgInfo, blnBinInfo, glbBinAssetOptions, jcgCandles, jcgPronostico } from "../variables/main_variables.js";
 import { binServerTime, binExchgInfo } from "../variables/BinanceVar.js";
 import { binGetTime, binGetInfo } from "./BinanceFnc.js";
 import { fncDOMHora, fncDOMlstOptions } from "./main_DOM.js";
@@ -92,6 +92,10 @@ async function fncBin10seg() {
 async function fncBin01min() {
     if (blnBinInfo.stsSymbol) {
         await jcgCandles.getCandel("5m");
+        //Pronostico:
+        let emaPron = $("input[name='pronInt']:checked").val();
+        jcgCandles.pronosticoCl.update(jcgCandles[emaPron].ema07);
+        jcgCandles.pronosticoCl.getDOMPronostico("#idPronostico");
     }
 }
 

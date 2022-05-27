@@ -3,7 +3,8 @@
 import { binExchgInfo } from "./BinanceVar.js";
 import { glbBinFormatAsset } from "./main_variables.js";
 import { ClsCandelsExt, ClsCandelExt, ClsPriceExt } from "./BinanceObjExt.js";
-import { binGetCandle, binGetCandles, binGetPrice } from "../funciones/BinanceFnc.js"
+import { binGetCandle, binGetCandles, binGetPrice } from "../funciones/BinanceFnc.js";
+import { smaEcuaciones } from "../funciones/matrices.js";
 
 // Objetos de estados
 class ClsJcgInfo {
@@ -32,9 +33,108 @@ class ClsBinInfo {
     }
 };
 
-export { ClsJcgInfo, ClsBinInfo };
-
 // OBJETOS DE JCGTrade relacionados con BINANCE
+class ClsPronosticos {
+    constructor(intervalo = "05mCl") {
+        this.intervalo = intervalo;
+        this.coef = [];
+        this.vert_xydir = [];
+        this.pronostico = [];
+        this.curva = [];
+    }
+    update(ema) {
+        // Dada una serie de valores de una tendencia, elige tres intercalados desde el final de la serie.
+        // Con estos tres valores, ajusta una parábola y obtiene el punto mínimo/máximo en coordenadas [x, y];
+        // Además, calcula el valor  pronosticado para los siguientes dos intervalos, además del actual.
+        let auxEma = [...ema];
+        let orden = auxEma.length - 1
+        const par = [];
+        par.push([-3, auxEma[orden - 3]]);
+        par.push([-2, auxEma[orden - 2]]);
+        par.push([-1, auxEma[orden - 1]]);
+
+        // Tratamiento de las matrices
+        const matEcuaciones = [];
+        const matResultados = [];
+        for (let i = 0; i < par.length; i++) {
+            matEcuaciones.push([Math.pow(par[i][0], 2), par[i][0], 1]);
+            matResultados.push(par[i][1]);
+        }
+
+        this.coef = [...smaEcuaciones(matEcuaciones, matResultados)];
+        this.getMaxMin();
+        this.getPronostico();
+        this.getCurva();
+    }
+    getMaxMin() {
+        let xvert = Math.round(-this.coef[1] / 2 / this.coef[0]);
+        let yvert = this.coef[0] * Math.pow(xvert, 2) + this.coef[1] * xvert + this.coef[2];
+        this.vert_xydir.length = 0;
+        this.vert_xydir.push(xvert);
+        this.vert_xydir.push(yvert);
+        this.vert_xydir.push(Math.sign(this.coef[0]));
+    }
+    getPronostico() {
+        this.pronostico.length = 0;
+        for (let i = 0; i <= 2; i++) {
+            let yval = this.coef[0] * Math.pow(i, 2) + this.coef[1] * i + this.coef[2];
+            this.pronostico.push([i, yval]);
+        }
+    }
+    getCurva() {
+        let desde = - 7;
+        let hasta = + 3;
+        this.curva.length = 0;
+        for (let i = desde; i <= hasta; i++) {
+            let yval = this.coef[0] * Math.pow(i, 2) + this.coef[1] * i + this.coef[2];
+            this.curva.push([i, yval]);
+        }
+    }
+    getDOMPronostico(padre) {
+        let fixed = 5 - Math.trunc(this.vert_xydir[1]).toString().length;
+        let vert = this.vert_xydir[1];
+        let p00 = this.pronostico[0][1];
+        let p01 = this.pronostico[1][1];
+        let p02 = this.pronostico[2][1];
+        let auxDOM = `
+            <tr>
+                <th scope="row">Vertx</th>
+                <td colspan="2">${this.vert_xydir[0]}</td>
+            </tr>
+            <tr>
+                <th scope="row">Verty</th>
+                <td colspan="2">${vert.toFixed(fixed)}</td>
+            </tr>
+            <tr>
+                <th scope="row">Dir</th>
+                <td colspan="2">${this.vert_xydir[2]}</td>
+            </tr>
+            <tr>
+                <th scope="row">+00</th>
+                <td>${p00.toFixed(fixed)}</td>
+                <td>${((p00 / vert - 1) * 100).toFixed(3)} %</td>
+            </tr>
+            <tr>
+                <th scope="row">+01</th>
+                <td>${p01.toFixed(fixed)}</td>
+                <td>${((p01 / vert - 1) * 100).toFixed(3)} %</td>
+            </tr>
+            <tr>
+                <th scope="row">+02</th>
+                <td>${p02.toFixed(fixed)}</td>
+                <td>${((p02 / vert - 1) * 100).toFixed(3)} %</td>
+            </tr>
+            `;
+        $(padre).html(auxDOM);
+    }
+    reset() {
+        this.intervalo = "05m";
+        this.coef.length = 0;
+        this.vert_xydir.length = 0;
+        this.pronostico.length = 0;
+        this.curva.length = 0;
+    }
+}
 class ClsIndTec {
     constructor() {
         this.candles = [];
@@ -46,7 +146,7 @@ class ClsIndTec {
         this.histo = [];
     }
     async getInicial(candelas) {
-        this.candles = candelas;
+        this.candles = [...candelas];
         this.ema02.length = 0;
         this.ema07.length = 0;
         this.ema25.length = 0;
@@ -174,6 +274,9 @@ class ClsJcgBin {
         this.sr05m = new ClsSopRes();
         this.sr30m = new ClsSopRes();
         this.sr04h = new ClsSopRes();
+        this.pronosticoCl = new ClsPronosticos("05mCl");
+        this.canvasMax = 0;
+        this.canvasMin = 0;
         this.stsPrice = false
         this.sts05m = false;
         this.sts30m = false;
@@ -191,6 +294,9 @@ class ClsJcgBin {
         this[candAux].candles.push(candela);
         recortarArray(this[candAux].candles, 200);
         this[indAux].actCandelas(candela.close);
+        if (periodo === "30m") {
+            this.fncCanvasMaxMin();
+        }
     }
     actSopRes() {
         let indice = this.cand05m.candles.length - 1;
@@ -218,10 +324,13 @@ class ClsJcgBin {
         this.ind05mCl.reset();
         this.ind30mCl.reset();
         this.ind04hCl.reset();
+        this.pronosticoCl.reset();
         this.sts05m = false;
         this.sts30m = false;
         this.sts04h = false;
         this.stsBusy = false;
+        this.canvasMax = 0;
+        this.canvasMin = 0;
     }
 
     //ELEMENTOS DEL DOM
@@ -249,12 +358,8 @@ class ClsJcgBin {
             let ema07 = this[nombre].ema07;
             let ema25 = this[nombre].ema25;
             if (Math.min(ema02.length, ema07.length, ema25.length) > 0) {
-                let max = Math.max(ema02.reduce((prev, act) => Math.max(prev, act)),
-                    ema07.reduce((prev, act) => Math.max(prev, act)),
-                    ema25.reduce((prev, act) => Math.max(prev, act)));
-                let min = Math.min(ema02.reduce((prev, act) => Math.min(prev, act)),
-                    ema07.reduce((prev, act) => Math.min(prev, act)),
-                    ema25.reduce((prev, act) => Math.min(prev, act)));
+                let max = this.canvasMax;;
+                let min = this.canvasMin;
                 let div = Math.max(ema02.length, ema07.length, ema25.length);
                 let ctx = canvas.getContext('2d');
                 let ancho = canvas.width;
@@ -273,6 +378,15 @@ class ClsJcgBin {
         } else {
             $(padre).html("Canvas no soportado por este navegador");
         }
+    }
+    fncCanvasMaxMin() {
+        let auxcanvas1 = [...this.ind04hCl.candles].slice(-20);
+        let auxcanvas2 = [...this.ind30mCl.candles].slice(-20);
+        let auxcanvas3 = [...this.ind05mCl.candles].slice(-20);
+        let auxcanvas = [...auxcanvas1, ...auxcanvas2, ...auxcanvas3];
+        this.canvasMax = auxcanvas.reduce((prev, act) => Math.max(prev, act));
+        this.canvasMin = auxcanvas.reduce((prev, act) => Math.min(prev, act));
+
     }
 
     //TAREAS ASINCRÓNICAS
@@ -310,6 +424,9 @@ class ClsJcgBin {
             }
         }
 
+        this.fncCanvasMaxMin();
+        let auxPron = `ind${this.pronosticoCl.intervalo}Cl`;
+        this.pronosticoCl.update(this[auxPron].ema07);
     }
     async getCandel(periodo = "5m") {
         this.stsBusy = true;
@@ -320,7 +437,10 @@ class ClsJcgBin {
     }
 
 }
-export { ClsJcgBin };
+export { ClsJcgInfo, ClsBinInfo };
+export { ClsJcgBin, ClsPronosticos };
+
+
 
 // FUNCIONES UTILIZADAS INTERNAMENTE EN ESTE MÓDULO
 function ema(periodo, ant, act) {
@@ -335,17 +455,20 @@ function recortarArray(array, tamano) {
 // FUNCIONES INTERNAS PARA CANVAS DE EMAS
 function fncDrwGrid(objCanvas, ancho, alto, x0, y0, div, max, min) {
     objCanvas.clearRect(0, 0, ancho, alto);
-    let intervaloX = Math.trunc((ancho - x0) / div);
+    let divsPronostico = 2;
+    let intervaloX = Math.trunc((ancho - x0) / (div + divsPronostico));
     let intervaloY = Math.trunc(y0 / div);
     let gridX = new Path2D();
     let gridY = new Path2D();
-    for (let i = 0; i <= div; i++) {
+    for (let i = 0; i <= (div + divsPronostico); i++) {
         let desplX = x0 + i * intervaloX;
         let desplY = (i + 1) * intervaloY;
         gridX.moveTo(desplX, 0);
         gridX.lineTo(desplX, y0 + 5);
-        gridY.moveTo(x0 - 5, desplY);
-        gridY.lineTo(ancho, desplY);
+        if (i <= div) {
+            gridY.moveTo(x0 - 5, desplY);
+            gridY.lineTo(ancho, desplY);
+        }
     }
     objCanvas.strokeStyle = "white";
     objCanvas.lineWidth = 1;
@@ -355,15 +478,16 @@ function fncDrwGrid(objCanvas, ancho, alto, x0, y0, div, max, min) {
     let deltaY = (max - min) / div;
     let fixed = 7 - Math.trunc(max).toString().length;
     objCanvas.fillStyle = "white";
-    for (let i = 0; i <= div; i += 2) {
+    for (let i = 0; i <= (div + divsPronostico); i += 2) {
         let desplX = x0 + i * intervaloX;
         let desplY = (i + 1) * intervaloY;
         objCanvas.fillText((i - div).toFixed(0), desplX, alto - (alto - y0) / 2);
-        objCanvas.fillText((max - deltaY * i).toFixed(fixed), 5, desplY);
+        (i <= div) && objCanvas.fillText((max - deltaY * i).toFixed(fixed), 5, desplY);
     }
 }
 function fncDrwEma(objCanvas, ema02, ema07, ema25, ancho, alto, x0, y0, div, max, min) {
-    let deltaX = Math.trunc((ancho - x0) / div);
+    let divsPronostico = 2;
+    let deltaX = Math.trunc((ancho - x0) / (div + divsPronostico));
     let deltaY = y0 / (max - min);
     let grid02 = new Path2D();
     let grid07 = new Path2D();
@@ -371,10 +495,10 @@ function fncDrwEma(objCanvas, ema02, ema07, ema25, ancho, alto, x0, y0, div, max
 
     for (let i = 0; i <= div; i++) {
         let desplX = x0 + (i + 1) * deltaX;
-        let desplY02 = y0 - deltaY * (ema02[i]-min);
-        let desplY07 = y0 - deltaY * (ema07[i]-min);
-        let desplY25 = y0 - deltaY * (ema25[i]-min);
-        if (i===0){
+        let desplY02 = y0 - deltaY * (ema02[i] - min);
+        let desplY07 = y0 - deltaY * (ema07[i] - min);
+        let desplY25 = y0 - deltaY * (ema25[i] - min);
+        if (i === 0) {
             grid02.moveTo(desplX, desplY02);
             grid07.moveTo(desplX, desplY07);
             grid25.moveTo(desplX, desplY25);
@@ -392,3 +516,4 @@ function fncDrwEma(objCanvas, ema02, ema07, ema25, ancho, alto, x0, y0, div, max
     objCanvas.strokeStyle = "magenta";
     objCanvas.stroke(grid25);
 }
+

@@ -1,4 +1,4 @@
-import { ClsBinInfo, ClsJcgBin, ClsJcgInfo } from "./JcgObj.js";
+import { ClsBinInfo, ClsJcgBin, ClsJcgInfo, ClsPronosticos } from "./JcgObj.js";
 
 
 //DEFINICION DE VARIABLES GLOBALES
@@ -29,7 +29,8 @@ const blnBinInfo = new ClsBinInfo();
 
 //VARIABLES DE JCGTrade
 const jcgCandles = new ClsJcgBin();
+const jcgPronostico = new ClsPronosticos();
 
 export { glbUTC, glbLTC, glbBinAssetOptions, glbBinFormatAsset };
 export { blnJcgInfo, blnBinInfo };
-export { jcgCandles };
+export { jcgCandles, jcgPronostico };
